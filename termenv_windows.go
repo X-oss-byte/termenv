@@ -103,8 +103,8 @@ func EnableVirtualTerminalProcessing(o *Output) (restoreFunc func() error, err e
 	}
 
 	// If o is not a tty, then there is nothing to do.
-	tty := o.TTY()
-	if tty == nil {
+	tty, ok := o.TTY().(File)
+	if tty == nil || !ok {
 		return
 	}
 

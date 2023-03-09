@@ -178,9 +178,12 @@ func (o *Output) HasDarkBackground() bool {
 	return l < 0.5
 }
 
-// TTY returns the terminal's file descriptor. This may be nil if the output is
+// TTY returns the underlying terminal output. This may be nil if the output is
 // not a terminal.
-func (o Output) TTY() File {
+func (o Output) TTY() io.Writer {
+	if o.assumeTTY || o.unsafe {
+		return o.tty
+	}
 	if f, ok := o.tty.(File); ok {
 		return f
 	}
