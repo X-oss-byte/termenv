@@ -3,6 +3,7 @@ package termenv
 import (
 	"errors"
 	"os"
+	"strings"
 
 	"github.com/mattn/go-isatty"
 )
@@ -29,9 +30,14 @@ func (o *Output) isTTY() bool {
 	if o.assumeTTY || o.unsafe {
 		return true
 	}
-	if len(o.environ.Getenv("CI")) > 0 {
+	env := o.environ.Getenv("TERMENV_TTY")
+	switch strings.ToLower(env) {
+	case "1", "true", "yes", "on":
+		return true
+	case "0", "false", "no", "off":
 		return false
 	}
+
 	if f, ok := o.Writer().(*os.File); ok {
 		return isatty.IsTerminal(f.Fd())
 	}
