@@ -11,19 +11,13 @@ var (
 	output = NewOutput(os.Stdout)
 )
 
-// File represents a file descriptor.
-type File interface {
-	io.ReadWriter
-	Fd() uintptr
-}
-
 // OutputOption sets an option on Output.
 type OutputOption = func(*Output)
 
 // Output is a terminal output.
 type Output struct {
 	Profile
-	tty     io.Writer
+	w       io.Writer
 	environ Environ
 
 	assumeTTY bool
@@ -61,10 +55,10 @@ func SetDefaultOutput(o *Output) {
 	output = o
 }
 
-// NewOutput returns a new Output for the given file descriptor.
-func NewOutput(tty io.Writer, opts ...OutputOption) *Output {
+// NewOutput returns a new Output for the given writer.
+func NewOutput(w io.Writer, opts ...OutputOption) *Output {
 	o := &Output{
-		tty:     tty,
+		w:       w,
 		environ: &osEnviron{},
 		Profile: -1,
 		fgSync:  &sync.Once{},
@@ -73,8 +67,8 @@ func NewOutput(tty io.Writer, opts ...OutputOption) *Output {
 		bgColor: NoColor{},
 	}
 
-	if o.tty == nil {
-		o.tty = os.Stdout
+	if o.w == nil {
+		o.w = os.Stdout
 	}
 	for _, opt := range opts {
 		opt(o)
@@ -180,15 +174,23 @@ func (o *Output) HasDarkBackground() bool {
 
 // TTY returns the terminal's file descriptor. This may be nil if the output is
 // not a terminal.
-func (o Output) TTY() File {
-	if f, ok := o.tty.(File); ok {
+//
+// Deprecated: Use Writer() instead.
+func (o Output) TTY() *os.File {
+	if f, ok := o.w.(*os.File); ok {
 		return f
 	}
 	return nil
 }
 
+// Writer returns the underlying writer. This may be of type io.Writer,
+// io.ReadWriter, or *os.File.
+func (o Output) Writer() io.Writer {
+	return o.w
+}
+
 func (o Output) Write(p []byte) (int, error) {
-	return o.tty.Write(p)
+	return o.w.Write(p)
 }
 
 // WriteString writes the given string to the output.
