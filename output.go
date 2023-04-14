@@ -67,6 +67,7 @@ func NewOutput(tty io.Writer, opts ...OutputOption) *Output {
 		tty:     tty,
 		environ: &osEnviron{},
 		Profile: -1,
+		cache:   true,
 		fgSync:  &sync.Once{},
 		fgColor: NoColor{},
 		bgSync:  &sync.Once{},
